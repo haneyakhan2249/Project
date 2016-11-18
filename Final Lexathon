@@ -5,27 +5,27 @@ nemsg:		.asciiz "Invalid word\n"
 notinlist: 	.asciiz "word not in list\n"
 correct:	.asciiz "Correct\n"
 exitstatement: 	.asciiz "Goodbye!"
+vowels: 	.asciiz "aeiou"
+
+welcome:	.asciiz "Welcome to Lexathon!"
+
+
 period: 	.asciiz "."
 slash: 		.asciiz "/"
 newline:	.asciiz "\n"
 
-characters: 	.space 9		#creating array to store characters
+characters: 	.space 10		#creating array to store characters
 input:		.space 80		#array to hold input
-buffer:		.space 800000000	#array for file
+buffer:		.space 6000000		#array for file
 
 .text
+	
+######################## MAIN #########################################################
 
-main:
-	lb $s6, period			#period
-	lb $s7, slash 			#slash
-	lb $s5, newline			#new line
-	
-	addi $s3, $s3, 0 		#initialize counter
-	la $s2, input 			#get input address
-	la $s1, buffer			#get file buffer address
-	
-       
-############################ OPEN AND READ FILE #############################################
+
+
+########################### OPEN AND READ FILE #############################################
+
 readFile:
 	#open a file 
 	li   $v0, 13       # system call for open file
@@ -43,15 +43,13 @@ readFile:
 	li  $a2, 1000000
 	syscall            # read from file
 	
-	#move $t1, $zero 	#clear file descriptor	
 
 ###############################RANDOM LETTERS############################################	
 	
-	la $s0, characters 		#storing it in register $s0
-	
 randomLetters:       
-	#la $s0, characters 		#storing it in register $s0	
-	li $t1, 0 			#temporary register $t0 to store counter 
+	la $s0, characters 		#storing it in register $s0
+	li $t7, 0 			#temporary register $t0 to store counter 
+	
 loop:  li $a1, 26 #range of characters
        li $v0, 42 #random character
        syscall
@@ -59,18 +57,83 @@ loop:  li $a1, 26 #range of characters
        sb $a0, ($s0)
        
        addi $s0, $s0, 1 #moving to next character 
-       addi $t1, $t1, 1 #incrementing counter 
-       blt $t1, 9 , loop #branching through to get 9 random characters
+       addi $t7, $t7, 1 #incrementing counter 
+       blt $t7, 8, loop #branching through to get 8 random characters
        sb $zero, 0($s0)
+       add $t6, $zero, $zero
+       addi $t1, $zero, 1
+       addi $t2, $zero, 2
+       addi $t3, $zero, 3
+       addi $t4, $zero, 4
+       addi $t5, $zero, 5
        
+generateVowels:
+       li $a1, 6 #range of characters
+       li $v0, 42 #random character
+       syscall
+       move $t0, $a0
+       beq $t0, $t1, addA
+       beq $t0, $t2, addE
+       beq $t0, $t3, addI
+       beq $t0, $t4, addO
+       beq $t0, $t5, addU
+        
+       #generating random vowels    
+       addA: 
+       la $s6, vowels
+       lb $s7, 0($s6) 
+       sb $s7, ($s0)
+       j printLetters
+       addE:
+       la $s6, vowels
+       lb $s7, 1($s6)
+       sb $s7, ($s0) 
+       j printLetters
+       addI:
+       la $s6, vowels
+       lb $s7, 2($s6) 
+       sb $s7, ($s0)
+       j printLetters
+       addO:
+       la $s6, vowels
+       lb $s7, 3($s6) 
+       sb $s7, ($s0)
+       j printLetters
+       addU:
+       la $s6, vowels
+       lb $s7, 4($s6) 
+       sb $s7, ($s0)
+       j printLetters      
+
+printLetters: 
        la $a0, characters #printing the random characters
        li $v0, 4
        syscall
        
-       move $t1, $zero
+      #Reset Register
+      move $t0, $zero
+      move $t1, $zero
+      move $t2, $zero
+      move $t3, $zero
+      move $t4, $zero
+      move $t5, $zero
+      move $t6, $zero
+      move $t7, $zero
+      move $s6, $zero
+      move $s7, $zero
 
+######################## SETUP #########################################################
+
+setup:	
+	lb $s6, period			#period
+	lb $s7, slash 			#slash
+	lb $s5, newline			#new line
+	la $s2, input 			#get input address
+	move $s3, $zero
+
+	
 ######################## GET INPUT #########################################################
-
+			
 getInput:   
    	addi $t7, $zero, -1  #initialize input pointer
    	la $a0, prompt  #ask user to enter string
@@ -123,7 +186,6 @@ periodFound:
     	syscall
     	
     	addi $s3, $s3, 1 #add one to total score
-    	#add $a0, $zero,$zero
     	j nextInput  
 
 nextInput:
@@ -165,20 +227,19 @@ finalExit:
 	syscall
 	
 reset:
-	#move $t0, $zero
-	#move $s1, $zero
-	#move $t2, $zero
-	#move $t3, $zero
-	#move $t4, $zero
-	#move $t5, $zero
-	#move $t7, $zero
+	move $t0, $zero
+	move $t1, $zero
+	move $t2, $zero
+	move $t3, $zero
+	move $t4, $zero
+	move $t5, $zero
+	move $t7, $zero
+	move $s6, $zero
+	move $s7, $zero
 	
-	#move $s0, $zero
-	#move $s2, $zero
-	move $s3, $zero
-	
+	move $s0, $zero
 	la $s0, characters #storing it in register $s0
-       	li $t1, 0 #temporary register $t0 to store counter 
+	
 	j randomLetters
 
 	
