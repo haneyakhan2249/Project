@@ -7,8 +7,9 @@ correct:	.asciiz "Correct\n"
 exitstatement: 	.asciiz "Goodbye!"
 vowels: 	.asciiz "aeiou"
 
-welcome:	.asciiz "Welcome to Lexathon!"
-
+welcome:	.asciiz "Welcome to LEXATHON!!!\n"
+rules:		.asciiz "\nRules:\n1. Use the letters below to make words.\n2. The words must be lowercase and between 4 and 9 alphabetic letters.\n3. Enter '1' when you want a new set of letters.\n4. Enter '0' when you want to exit the game."
+stars: 		.asciiz "\n*******************************************************************************\n"
 
 period: 	.asciiz "."
 slash: 		.asciiz "/"
@@ -22,7 +23,26 @@ buffer:		.space 6000000		#array for file
 	
 ######################## MAIN #########################################################
 
-
+main:
+	li $v0, 4
+	la $a0, stars
+	syscall
+	
+	li $v0, 4
+	la $a0, welcome
+	syscall
+	
+	li $v0, 4
+	la $a0, rules
+	syscall
+	
+	li $v0, 4
+	la $a0, stars
+	syscall
+	
+	li $v0, 4
+	la $a0, newline
+	syscall
 
 ########################### OPEN AND READ FILE #############################################
 
