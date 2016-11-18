@@ -1,10 +1,11 @@
 .data
 fin :		.asciiz "words.txt"
 prompt:		.asciiz "\n\nEnter word: "
-notinlist: 	.asciiz "*Not a valid word in dictioanry./nPlease try again.\n"
-correct:	.asciiz "Correct\n"
+notinlist: 	.asciiz "*Not a valid word in dictionary.\nPlease try again.\n"
+correct:	.asciiz "*Correct!\n"
 exitstatement: 	.asciiz "*Goodbye!"
 vowels: 	.asciiz "aeiou"
+score: 		.asciiz "Score: "
 notvalid:	.asciiz "*Please try again using the given letters."
 
 welcome:	.asciiz "\nWelcome to LEXATHON!!!\n"
@@ -260,7 +261,13 @@ slashFound:
 	j getInput   
 
 periodFound:
+    	
+    	
     	la $a0,correct
+    	li $v0,4
+    	syscall
+    	
+    	la $a0,score
     	li $v0,4
     	syscall
     	
@@ -318,6 +325,10 @@ reset:
 	
 	move $s0, $zero
 	la $s0, characters #storing it in register $s0
+	
+	li $v0, 4
+	la $a0, stars
+	syscall
 	
 	j randomLetters
 
