@@ -1,15 +1,15 @@
 .data
 fin :		.asciiz "words.txt"
-prompt:		.asciiz "\nEnter word: "
-nemsg:		.asciiz "Invalid word\n"
-notinlist: 	.asciiz "word not in list\n"
+prompt:		.asciiz "\n\nEnter word: "
+notinlist: 	.asciiz "*Not a valid word in dictioanry./nPlease try again.\n"
 correct:	.asciiz "Correct\n"
-exitstatement: 	.asciiz "Goodbye!"
+exitstatement: 	.asciiz "*Goodbye!"
 vowels: 	.asciiz "aeiou"
+notvalid:	.asciiz "*Please try again using the given letters."
 
-welcome:	.asciiz "Welcome to LEXATHON!!!\n"
+welcome:	.asciiz "\nWelcome to LEXATHON!!!\n"
 rules:		.asciiz "\nRules:\n1. Use the letters below to make words.\n2. The words must be lowercase and between 4 and 9 alphabetic letters.\n3. Enter '1' when you want a new set of letters.\n4. Enter '0' when you want to exit the game."
-stars: 		.asciiz "\n*******************************************************************************\n"
+stars: 		.asciiz "\n*******************************************************************************"
 
 period: 	.asciiz "."
 slash: 		.asciiz "/"
@@ -126,6 +126,10 @@ generateVowels:
        j printLetters      
 
 printLetters: 
+       	li $v0, 4
+	la $a0, newline
+	syscall
+       
        la $a0, characters #printing the random characters
        li $v0, 4
        syscall
@@ -160,7 +164,7 @@ getInput:
     	li $v0, 4
     	syscall
 
-    	move $a0,$s2 #read in string
+    	move $a0, $s2 #read in string
     	li $a1,50
     	li $v0,8
     	syscall
@@ -169,8 +173,63 @@ getInput:
  	addi $t2, $zero, 48		#load the ascii value of 0 in $s7
 	addi $t3, $zero, 49		#load the ascii value of 1 in $s6
 	lb $t1, ($s2)
-	beq $t2,$t1, finalExit		#if input is 0, branch to exit
+	beq $t2, $t1, finalExit		#if input is 0, branch to exit
 	beq $t3, $t1, reset	#if input is 1, branch back to the beginning
+	
+	lb $t2, newline
+	la $t0, characters
+	move $t4, $s2
+
+loop2:	lb $t5,($t4)		# get next char from input
+	beq $t5, $t2, end
+	
+	lb $t3, ($t0)
+	beq $t5, $t3, found
+	addi $t0, $t0, 1
+	lb $t3, ($t0)
+	beq $t5, $t3, found
+	addi $t0, $t0, 1
+	lb $t3, ($t0)
+	beq $t5, $t3, found
+	addi $t0, $t0, 1
+	lb $t3, ($t0)
+	beq $t5, $t3, found
+	addi $t0, $t0, 1
+	lb $t3, ($t0)
+	beq $t5, $t3, found
+	addi $t0, $t0, 1
+	lb $t3, ($t0)
+	beq $t5, $t3, found
+	addi $t0, $t0, 1
+	lb $t3, ($t0)
+	beq $t5, $t3, found
+	addi $t0, $t0, 1
+	lb $t3, ($t0)
+	beq $t5, $t3, found
+	addi $t0, $t0, 1
+	lb $t3, ($t0)
+	beq $t5, $t3, found
+	addi $t0, $t0, 1
+	lb $t3, ($t0)
+	beq $t5, $t3, found
+	addi $t0, $t0, 1
+	j nope
+	
+found: 	move $t0, $zero
+	la $t0, characters
+	addi $t4, $t4, 1
+	j loop2
+	
+nope:	li $v0, 4
+	la $a0, notvalid
+	syscall
+	j getInput
+	
+end: 	move $t0, $zero
+	move $t3, $zero
+	move $t5, $zero
+	move $t2, $zero
+	move $t4, $zero
 
 ##################### COMPARE ###############################################################
 cmpLoop:
