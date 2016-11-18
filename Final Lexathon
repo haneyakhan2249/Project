@@ -1,24 +1,58 @@
 .data
-prompt:	.asciiz     "\nEnter word: "
-nemsg:	.asciiz     "Invalid word\n"
-end: .asciiz "word not in list\n"
-correct: .asciiz "Correct\n"
-fin :	.asciiz "words.txt"
-period: .asciiz "."
-endoffile: .asciiz "/"
-exitstatement: .asciiz "The game is over! Goodbye!"
+fin :		.asciiz "words.txt"
+prompt:		.asciiz "\nEnter word: "
+nemsg:		.asciiz "Invalid word\n"
+notinlist: 	.asciiz "word not in list\n"
+correct:	.asciiz "Correct\n"
+exitstatement: 	.asciiz "Goodbye!"
+period: 	.asciiz "."
+slash: 		.asciiz "/"
+newline:	.asciiz "\n"
 
-characters: .space 9 #creating array to store characters
-input:	.space      80
-buffer:	.space      800000000
-
+characters: 	.space 9		#creating array to store characters
+input:		.space 80		#array to hold input
+buffer:		.space 800000000	#array for file
 
 .text
-       la $s0, characters #storing it in register $s0
-       li $t1, 0 #temporary register $t0 to store counter 
- 
-randomletters:
-       li $a1, 26 #range of characters
+
+main:
+	lb $s6, period			#period
+	lb $s7, slash 			#slash
+	lb $s5, newline			#new line
+	
+	addi $s3, $s3, 0 		#initialize counter
+	la $s2, input 			#get input address
+	la $s1, buffer			#get file buffer address
+	
+       
+############################ OPEN AND READ FILE #############################################
+readFile:
+	#open a file 
+	li   $v0, 13       # system call for open file
+	la   $a0, fin      # board file name
+	li   $a1, 0        # Open for reading
+	li   $a2, 0
+	syscall            # open a file (file descriptor returned in $v0)
+	move $t1, $v0      # save the file descriptor 
+	
+	#read from file
+	move $a0, $v0      # file descriptor 
+	li   $v0, 14       # system call for read from file
+	la   $a1, buffer   # address of buffer to which to read
+	move $s1, $a1	   # reload buffer	
+	li  $a2, 1000000
+	syscall            # read from file
+	
+	#move $t1, $zero 	#clear file descriptor	
+
+###############################RANDOM LETTERS############################################	
+	
+	la $s0, characters 		#storing it in register $s0
+	
+randomLetters:       
+	#la $s0, characters 		#storing it in register $s0	
+	li $t1, 0 			#temporary register $t0 to store counter 
+loop:  li $a1, 26 #range of characters
        li $v0, 42 #random character
        syscall
        addi $a0, $a0, 97 #starting at lower case a - lower case z
@@ -26,131 +60,128 @@ randomletters:
        
        addi $s0, $s0, 1 #moving to next character 
        addi $t1, $t1, 1 #incrementing counter 
-       blt $t1, 9 , randomletters #branching through to get 9 random characters
+       blt $t1, 9 , loop #branching through to get 9 random characters
        sb $zero, 0($s0)
        
        la $a0, characters #printing the random characters
        li $v0, 4
        syscall
-	move $zero, $t1       
+       
+       move $t1, $zero
 
-
-main:
-	addi $s3, $s3, 0 #initialize counter
-	la      $s2,input #get buffer addresss
-	move    $t2,$s2
-	
-	la $s2, buffer
-	move $t3, $s2
-	
-	lb $t6, period
-	#addi $t7, $t7, -1 #initialize input pointer
-	lb $s7, endoffile #slash
-	addi $s4, $zero, 0
-readFile:
-	#open a file for writing
-	li   $v0, 13       # system call for open file
-	la   $a0, fin      # board file name
-	li   $a1, 0        # Open for reading
-	li   $a2, 0
-	syscall            # open a file (file descriptor returned in $v0)
-	move $s6, $v0      # save the file descriptor 
-	
-	#read from file
-	move $a0, $v0      # file descriptor 
-	li   $v0, 14       # system call for read from file
-	la   $a1, buffer   # address of buffer to which to read
-	move $t3, $a1
-	li  $a2, 100000000
-	syscall            # read from file
-	
+######################## GET INPUT #########################################################
 
 getInput:   
    	addi $t7, $zero, -1  #initialize input pointer
-   	la      $a0,prompt  #as user to enter string
-    	li      $v0,4
+   	la $a0, prompt  #ask user to enter string
+    	li $v0, 4
     	syscall
 
-    	move    $a0,$t2 #read in string
-    	li      $a1,50
-    	li      $v0,8
+    	move $a0,$s2 #read in string
+    	li $a1,50
+    	li $v0,8
     	syscall
     	
-inputValidation:	addi $s7, $zero, 48		#load the ascii value of 0 in $s7
-			addi $s6, $zero, 49		#load the ascii value of 1 in $s6
-			beq $t2,$s7, finalExit		#if input is 0, branch to exit
-			beq $t2, $s6, randomletters	#if input is 1, branch back to the beginning
+ inputValidation:	
+ 	addi $t2, $zero, 48		#load the ascii value of 0 in $s7
+	addi $t3, $zero, 49		#load the ascii value of 1 in $s6
+	lb $t1, ($s2)
+	beq $t2,$t1, finalExit		#if input is 0, branch to exit
+	beq $t3, $t1, reset	#if input is 1, branch back to the beginning
 
-cmploop:
-	#beq     $t5,$t6,Match 
-	addi 	$t7, $t7, 1		#add one to input counter
-	lb      $t4,($t2)                   # get next char from str1	
-	lb      $t5,($t3)                   # get next char from file
-	beq 	$t5, $s7, notFound
-	beq     $t5,$t6,Match             # check if period
-	bne     $t4,$t5,noMatch             # no match
-
+##################### COMPARE ###############################################################
+cmpLoop:
 	
-	addi    $t2,$t2,1                   # point to next char
-    	addi    $t3,$t3,1                   # point to next char
-    	j       cmploop
+	addi $t7, $t7, 1		#add one to input counter
+	lb $t4, ($s2)                   # get next char from str1	
+	lb $t5, ($s1)                   # get next char from file
+	beq $t5, $s7, slashFound	#end of file
+	beq $t5, $s6, periodFound             # check if period-correct wor
+	bne $t4, $t5, noMatch             # no match
 
-noMatch:
-    	beq     $t5,$t6,cmploop             # end of string
-    	la      $a0,nemsg
-    	li      $v0,4
+	addi $s1,$s1,1                   # point to next char
+    	addi $s2,$s2,1                   # point to next char
+    	j cmpLoop 
+
+slashFound:
+	li $v0,4			#print not in list
+	la $a0, notinlist
+	syscall
+	
+	li $v0, 1       
+	move $a0, $s3       # print score
+	syscall 
+	
+	move $s1, $zero		#reset file buffer
+	la $s1, buffer
+	
+	j getInput   
+
+periodFound:
+    	la $a0,correct
+    	li $v0,4
     	syscall
-    	sub $t2, $t2, $t7 #set input address back to beginning of input string
-    	addi $t7, $zero, -1 #set input counter back to zero
-    	j whattodoperiod
-    	#add $a0, $zero,$zero
-    	#j       getInput
     	
-whattodoperiod:
-	addi    $t3,$t3,1	# move pointer in file buffer until it hits a period
-	lb      $t5,($t3)    	# get next char from str2
-	beq	$t5, $t6,periodEqual	#if where the pointer is equal to period, go back to loop
-	j whattodoperiod	#if pointer is not equal to period then loop again
-	
-periodEqual:
-	addi    $t3,$t3,1	# move pointer in file buffer to kove past period
-	j cmploop
-
-Match:
-    	la      $a0,correct
-    	li      $v0,4
-    	syscall
     	addi $s3, $s3, 1 #add one to total score
-    	add $a0, $zero,$zero
-    	j Exit
-notFound:
-	li $v0,4
-	la $a0, end
-	syscall
-	
+    	#add $a0, $zero,$zero
+    	j nextInput  
+
+nextInput:
 	li $v0, 1       
 	move $a0, $s3       # $integer to print
-	syscall 
-	move $t3, $zero
-	la $t3, buffer
+	syscall
+	 
+	move $s1, $zero
+	la $s1, buffer
 	
 	j getInput
-	li $v0, 10
-	syscall	       
+	
+noMatch:
+    	beq     $t5,$s6,cmpLoop             # end of string
+    	
+    	sub $s2, $s2, $t7 #set input address back to beginning of input string
+    	addi $t7, $zero, -1 #set input counter back to zero
+    	
+    	j updateFileLocation
+    	
+updateFileLocation:
+	
+	addi    $s1,$s1,1	# move pointer in file buffer until it hits a period
+	lb      $t5,($s1)    	# get next char from str2
+	beq	$t5, $s6,ifPeriod	#if where the pointer is equal to period, go back to loop
+	j updateFileLocation	#if pointer is not equal to period then loop again
+	
+ifPeriod:
+	addi    $s1,$s1,1	# move pointer in file buffer to kove past period
+	j cmpLoop
+	
 
-
-Exit:
-	li $v0, 1       
-	move $a0, $s3       # $integer to print
-	syscall 
-	move $t3, $zero
-	la $t3, buffer
-	#addi    $t3,$t3,1	# move pointer in file buffer until it hits a period
-	#sub $t3, $t3, $s4
-	j getInput
-	li $v0, 10
-	syscall
-
-finalExit:	li $v0, 4,
+finalExit:	
+	li $v0, 4
 	la $a0, exitstatement
 	syscall
+	
+	li $v0,10
+	syscall
+	
+reset:
+	#move $t0, $zero
+	#move $s1, $zero
+	#move $t2, $zero
+	#move $t3, $zero
+	#move $t4, $zero
+	#move $t5, $zero
+	#move $t7, $zero
+	
+	#move $s0, $zero
+	#move $s2, $zero
+	move $s3, $zero
+	
+	la $s0, characters #storing it in register $s0
+       	li $t1, 0 #temporary register $t0 to store counter 
+	j randomLetters
+
+	
+	
+       
+       
