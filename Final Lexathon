@@ -6,6 +6,7 @@ correct: .asciiz "Correct\n"
 fin :	.asciiz "words.txt"
 period: .asciiz "."
 endoffile: .asciiz "/"
+exitstatement: .asciiz "The game is over! Goodbye!"
 
 characters: .space 9 #creating array to store characters
 input:	.space      80
@@ -75,9 +76,10 @@ getInput:
     	li      $v0,8
     	syscall
     	
-inputValidation:
-	
-
+inputValidation:	addi $s7, $zero, 48		#load the ascii value of 0 in $s7
+			addi $s6, $zero, 49		#load the ascii value of 1 in $s6
+			beq $t2,$s7, finalExit		#if input is 0, branch to exit
+			beq $t2, $s6, randomletters	#if input is 1, branch back to the beginning
 
 cmploop:
 	#beq     $t5,$t6,Match 
@@ -147,4 +149,8 @@ Exit:
 	#sub $t3, $t3, $s4
 	j getInput
 	li $v0, 10
+	syscall
+
+finalExit:	li $v0, 4,
+	la $a0, exitstatement
 	syscall
