@@ -29,10 +29,10 @@ correct:	.asciiz "*Correct!\n"
 exitstatement: 	.asciiz "*Goodbye!"
 vowels: 	.asciiz "aeiou"
 score: 		.asciiz "Score: "
-notvalid:	.asciiz "*Please try again using the given letters."
+notvalid:	.asciiz "*Please try again using the given letters and make sure to use the last letter."
 
 welcome:	.asciiz "\nWelcome to LEXATHON!!!\n"
-rules:		.asciiz "\nRules:\n1. Use the letters below to make words.\n2. The words must be lowercase and between 4 and 9 alphabetic letters.\n3. Use the singular tense of words. The dictionary does not recognize plural forms.\n4. Enter '1' when you want a new set of letters.\n5. Enter '0' when you want to exit the game."
+rules:		.asciiz "\nRules:\n1. Use the letters below to make words.\n2. The words must be lowercase and between 4 and 9 alphabetic letters.\n3. You must use the last letter in the given set.\n4. Use the singular tense of words. The dictionary does not recognize plural forms.\n5. Enter '1' when you want a new set of letters.\n6. Enter '0' when you want to exit the game."
 stars: 		.asciiz "\n*******************************************************************************"
 
 period: 	.asciiz "."
@@ -201,18 +201,32 @@ getInput:
 	lb $t2, newline
 	la $t0, characters
 	move $t4, $s2
+	addi $t0, $t0, 8
+	lb $t9, ($t0)
+	move $t0, $zero
+	la $t0, characters
+	
+root:	lb $t5, ($t4)
+	beq $t5, $t2, nope
+	beq $t5, $t9, rootfound
+	j noroot
+	
+rootfound: move $t5, $zero
+	move $t4, $zero
+	move $t4, $s2	
+	j loop2
+	
+noroot: addi $t4, $t4, 1
+	j root
 
 loop2:	lb $t5,($t4)			# get next char from input
 	beq $t5, $t2, end		# loop until end of input
 					# Check if input is using only the 9 random letters that are generated, if found, jump to found function
-	               			# for every letter in the input, loops through 9 letters until found; else error message
+	         			# for every letter in the input, loops through 9 letters until found; else error message
 	lb $t3, ($t0)			# load byte from 9 letters
 	beq $t5, $t3, found		# check if 9 letters byte and word byte are equal; if so. jump to found
 	addi $t0, $t0, 1		# else update 9 letters byte
 	lb $t3, ($t0)			# repeat
-	beq $t5, $t3, found
-	addi $t0, $t0, 1
-	lb $t3, ($t0)
 	beq $t5, $t3, found
 	addi $t0, $t0, 1
 	lb $t3, ($t0)
@@ -245,7 +259,8 @@ found: 	move $t0, $zero			# reset 9 letters
 	
 nope:	li $v0, 4			# if the input uses a  letter not in the 9 letters
 	la $a0, notvalid
-	syscall				# print error message
+	syscall	
+	move $t6, $zero			# print error message
 	j getInput			# get input
 	
 end: 	move $t0, $zero			# reset registers
@@ -253,6 +268,9 @@ end: 	move $t0, $zero			# reset registers
 	move $t5, $zero
 	move $t2, $zero
 	move $t4, $zero
+	move $t6, $zero
+	move $t8, $zero
+	move $t9, $zero
 
 ##################### COMPARE ###############################################################
 
