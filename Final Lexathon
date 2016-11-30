@@ -198,26 +198,26 @@ getInput:
 	beq $t2, $t1, finalExit		#if input is 0, branch to exit
 	beq $t3, $t1, reset	        #if input is 1, branch back to the beginning
 	
-	lb $t2, newline
-	la $t0, characters
-	move $t4, $s2
-	addi $t0, $t0, 8
-	lb $t9, ($t0)
-	move $t0, $zero
+	lb $t2, newline			# set $t2 to newline
+	la $t0, characters		
+	move $t4, $s2			# move input to $t4
+	addi $t0, $t0, 8		# move to 9th letter in characters
+	lb $t9, ($t0)			# load 9th character
+	move $t0, $zero			# reset characters in $t0
 	la $t0, characters
 	
-root:	lb $t5, ($t4)
-	beq $t5, $t2, nope
-	beq $t5, $t9, rootfound
-	j noroot
+root:	lb $t5, ($t4)			# load byte from input
+	beq $t5, $t2, nope		# check if new line
+	beq $t5, $t9, rootfound		# check if equal to last letter
+	j noroot			# if not equal
 	
-rootfound: move $t5, $zero
-	move $t4, $zero
+rootfound: move $t5, $zero		# if equal reset $t5
+	move $t4, $zero			# reset $t4 to input
 	move $t4, $s2	
-	j loop2
+	j loop2				# jump to loop2
 	
-noroot: addi $t4, $t4, 1
-	j root
+noroot: addi $t4, $t4, 1		# move to next byte in input
+	j root				# jump to root
 
 loop2:	lb $t5,($t4)			# get next char from input
 	beq $t5, $t2, end		# loop until end of input
